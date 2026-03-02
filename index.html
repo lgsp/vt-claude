@@ -1,0 +1,1637 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MP2I — 1.3 Validation, test</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:ital,wght@0,400;0,600;1,400&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #181c27;
+    --surface2: #1e2336;
+    --border: #2a3050;
+    --accent: #5b8dee;
+    --accent2: #e05b8d;
+    --accent3: #5be0c4;
+    --text: #e8eaf2;
+    --muted: #8892b0;
+    --code-bg: #111521;
+    --pass: #4caf82;
+    --fail: #e05b5b;
+    --warn: #e0c05b;
+    --font-display: 'Syne', sans-serif;
+    --font-body: 'Lora', serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+
+  /* ─── NAV ─── */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(15,17,23,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0.75rem 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 1rem;
+  }
+  .nav-brand {
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-decoration: none;
+  }
+  .nav-trail {
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    color: var(--muted);
+    display: flex; align-items: center; gap: 0.4rem;
+  }
+  .nav-trail span { color: var(--accent); }
+  .nav-links {
+    display: flex; gap: 0.5rem;
+  }
+  .nav-link {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 0.3rem 0.7rem;
+    border-radius: 4px;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+  }
+  .nav-link:hover { color: var(--accent); border-color: var(--border); }
+  .nav-link.active { color: var(--accent); border-color: var(--accent); }
+
+  /* ─── HERO ─── */
+  .hero {
+    padding: 5rem 2rem 4rem;
+    max-width: 900px;
+    margin: 0 auto;
+    position: relative;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -20%; right: -20%;
+    height: 400px;
+    background: radial-gradient(ellipse at 60% 0%, rgba(91,141,238,0.12) 0%, transparent 70%),
+                radial-gradient(ellipse at 20% 60%, rgba(91,224,196,0.07) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .hero-meta {
+    display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .badge {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    padding: 0.25rem 0.7rem;
+    border-radius: 3px;
+    text-transform: uppercase;
+  }
+  .badge-s1 { background: rgba(91,141,238,0.15); color: var(--accent); border: 1px solid rgba(91,141,238,0.3); }
+  .badge-lang { background: rgba(91,224,196,0.1); color: var(--accent3); border: 1px solid rgba(91,224,196,0.25); }
+  .badge-theme { background: rgba(224,91,141,0.1); color: var(--accent2); border: 1px solid rgba(224,91,141,0.25); }
+
+  .hero h1 {
+    font-family: var(--font-display);
+    font-size: clamp(2.2rem, 5vw, 3.5rem);
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 1rem;
+  }
+  .hero h1 em {
+    font-style: italic;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero-desc {
+    font-size: 1.1rem;
+    color: var(--muted);
+    max-width: 620px;
+    line-height: 1.8;
+    margin-bottom: 2rem;
+  }
+  .hero-stats {
+    display: flex; gap: 2rem; flex-wrap: wrap;
+  }
+  .stat {
+    display: flex; flex-direction: column;
+  }
+  .stat-val {
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--accent);
+  }
+  .stat-label {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  /* ─── PROGRESS ─── */
+  .progress-bar-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.2rem 1.5rem;
+    max-width: 900px;
+    margin: 0 auto 3rem;
+    display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+  }
+  .progress-label {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+  }
+  .progress-track {
+    flex: 1; min-width: 120px;
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 3px;
+    transition: width 0.6s ease;
+    width: 0%;
+  }
+  .progress-count {
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+
+  /* ─── SECTIONS ─── */
+  .section {
+    max-width: 900px;
+    margin: 0 auto 4rem;
+    padding: 0 2rem;
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  .section.visible { opacity: 1; transform: translateY(0); }
+
+  .section-header {
+    display: flex; align-items: baseline; gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-num {
+    font-family: var(--font-display);
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--border);
+    line-height: 1;
+  }
+  .section-title {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .seen-btn {
+    margin-left: auto;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.3rem 0.8rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .seen-btn:hover { border-color: var(--accent3); color: var(--accent3); }
+  .seen-btn.done { border-color: var(--accent3); color: var(--accent3); background: rgba(91,224,196,0.08); }
+
+  /* ─── TABLE ─── */
+  .prog-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+  .prog-table th {
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 0.75rem 1rem;
+    background: var(--surface);
+    border-bottom: 2px solid var(--border);
+    text-align: left;
+  }
+  .prog-table td {
+    padding: 0.9rem 1rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    line-height: 1.6;
+  }
+  .prog-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .prog-table td:first-child { font-weight: 500; color: var(--accent); font-size: 0.88rem; }
+  code { font-family: var(--font-mono); font-size: 0.83em; background: var(--code-bg); padding: 0.1em 0.4em; border-radius: 3px; color: var(--accent3); }
+
+  /* ─── COURS CARDS ─── */
+  .cours-grid {
+    display: grid;
+    gap: 1.25rem;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.5rem;
+    transition: border-color 0.2s;
+  }
+  .card:hover { border-color: rgba(91,141,238,0.4); }
+  .card-title {
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.75rem;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .card-title .icon { font-size: 1rem; }
+  .card h3 {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 0.75rem;
+  }
+  .card p { font-size: 0.92rem; color: var(--muted); margin-bottom: 0.6rem; }
+  .card p:last-child { margin-bottom: 0; }
+  .highlight {
+    background: var(--code-bg);
+    border-left: 3px solid var(--accent);
+    padding: 0.75rem 1rem;
+    border-radius: 0 4px 4px 0;
+    margin: 0.75rem 0;
+    font-size: 0.88rem;
+    color: var(--text);
+  }
+  .highlight.warn { border-color: var(--warn); }
+  .highlight.success { border-color: var(--accent3); }
+  .highlight.danger { border-color: var(--accent2); }
+  .highlight em { color: var(--accent3); font-style: normal; font-weight: 600; }
+
+  .def-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.75rem;
+    margin: 0.75rem 0;
+  }
+  .def-card {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.8rem;
+  }
+  .def-card .def-name {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--accent2);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.3rem;
+  }
+  .def-card p { font-size: 0.82rem; color: var(--text); margin: 0; }
+
+  /* ─── CFG VISUAL ─── */
+  .cfg-container {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+    overflow-x: auto;
+  }
+  .cfg-legend {
+    display: flex; gap: 1rem; flex-wrap: wrap;
+    margin-top: 1rem;
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+  .cfg-legend span { display: flex; align-items: center; gap: 0.3rem; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+  /* ─── CODE EDITOR ─── */
+  .code-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 0.5rem 0;
+  }
+  .code-header {
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    background: var(--code-bg);
+    border-bottom: 1px solid var(--border);
+  }
+  .code-lang {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--accent3);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .code-tabs {
+    display: flex; gap: 0.25rem; margin-bottom: 0;
+  }
+  .code-tab {
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.4rem 0.9rem;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .code-tab.active { color: var(--accent); border-color: var(--accent); background: rgba(91,141,238,0.08); }
+  .code-tab:hover:not(.active) { color: var(--text); }
+  .code-actions { margin-left: auto; display: flex; gap: 0.4rem; }
+  .btn-sm {
+    font-family: var(--font-display);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.3rem 0.7rem;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-sm:hover { color: var(--accent); border-color: var(--accent); }
+  .btn-sm.run { color: var(--accent3); border-color: rgba(91,224,196,0.4); }
+  .btn-sm.run:hover { background: rgba(91,224,196,0.08); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+  textarea.code {
+    width: 100%;
+    background: var(--code-bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    line-height: 1.6;
+    padding: 1rem 1.25rem;
+    border: none;
+    outline: none;
+    resize: vertical;
+    min-height: 200px;
+    tab-size: 2;
+  }
+  .output-box {
+    background: #0a0d14;
+    border-top: 1px solid var(--border);
+    padding: 0.75rem 1.25rem;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--accent3);
+    line-height: 1.6;
+    min-height: 2.5rem;
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .output-label {
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.4rem 1.25rem;
+    background: #0a0d14;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ─── TEST TABLE ─── */
+  .test-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    margin: 0.75rem 0;
+  }
+  .test-table th {
+    font-family: var(--font-display);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 0.5rem 0.8rem;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    text-align: left;
+  }
+  .test-table td {
+    padding: 0.5rem 0.8rem;
+    border: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    vertical-align: top;
+  }
+  .test-table td.pass { color: var(--pass); }
+  .test-table td.fail { color: var(--fail); }
+  .test-table td.cat { font-family: var(--font-display); font-size: 0.75rem; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.06em; }
+
+  /* ─── QCM ─── */
+  .qcm-zone { }
+  .qcm-progress {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 1rem;
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  #qcm-timer { color: var(--accent); }
+  .qcm-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.5rem;
+    min-height: 220px;
+  }
+  .qcm-q {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 1.25rem;
+    line-height: 1.6;
+  }
+  .qcm-q code { font-size: 0.9em; }
+  .qcm-opts {
+    display: flex; flex-direction: column; gap: 0.5rem;
+  }
+  .qcm-opt {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.65rem 1rem;
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: 0.88rem;
+    color: var(--text);
+    text-align: left;
+    transition: all 0.15s;
+    line-height: 1.5;
+  }
+  .qcm-opt:hover:not([disabled]) { border-color: var(--accent); color: var(--accent); }
+  .qcm-opt.correct { border-color: var(--pass); background: rgba(76,175,130,0.1); color: var(--pass); }
+  .qcm-opt.wrong { border-color: var(--fail); background: rgba(224,91,91,0.1); color: var(--fail); }
+  .qcm-opt[disabled] { cursor: default; }
+  .qcm-feedback {
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    font-size: 0.88rem;
+    line-height: 1.5;
+    display: none;
+  }
+  .qcm-feedback.show { display: block; }
+  .qcm-feedback.ok { background: rgba(76,175,130,0.1); border: 1px solid rgba(76,175,130,0.3); color: var(--pass); }
+  .qcm-feedback.ko { background: rgba(224,91,91,0.1); border: 1px solid rgba(224,91,91,0.3); color: var(--fail); }
+  .qcm-controls {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 1.25rem;
+    flex-wrap: wrap; gap: 0.75rem;
+  }
+  .qcm-score-display {
+    font-family: var(--font-display);
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .btn-primary {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.5rem 1.2rem;
+    border-radius: 5px;
+    border: none;
+    background: var(--accent);
+    color: white;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-secondary {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.5rem 1.2rem;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-secondary:hover { border-color: var(--accent2); color: var(--accent2); }
+
+  /* ─── CONTACT ─── */
+  .contact-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+  }
+  .contact-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem;
+    text-decoration: none;
+    transition: all 0.2s;
+    display: flex; flex-direction: column; gap: 0.5rem;
+  }
+  .contact-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .contact-icon { font-size: 1.5rem; }
+  .contact-name {
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .contact-desc { font-size: 0.82rem; color: var(--muted); }
+  .contact-link {
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  /* ─── QR ─── */
+  .qr-wrap {
+    display: flex; justify-content: center; align-items: center;
+    margin: 0.75rem 0 0.5rem;
+    background: #fff;
+    border-radius: 6px;
+    padding: 8px;
+    width: 100px; height: 100px;
+    align-self: center;
+  }
+  .qr-wrap canvas, .qr-wrap img { display: block; }
+
+  /* ─── FOOTER ─── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 1.5rem 2rem;
+    text-align: center;
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  /* CFG SVG */
+  .cfg-svg { display: block; margin: 0 auto; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-brand" href="#">MP2I / MPI — Informatique</a>
+  <div class="nav-trail">
+    <span>›</span> 1. Méthodes de programmation
+    <span>›</span> <span>1.3 Validation, test</span>
+  </div>
+  <div class="nav-links">
+    <a class="nav-link" href="https://lgsp.github.io/ap-claude/" target="_blank">1.1</a>
+    <a class="nav-link" href="https://lgsp.github.io/ap-claude/" target="_blank">1.2</a>
+    <a class="nav-link active" href="#">1.3</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-meta">
+    <span class="badge badge-s1">S1 — Premier semestre</span>
+    <span class="badge badge-lang">C &amp; OCaml</span>
+    <span class="badge badge-theme">Tests &amp; Couverture</span>
+  </div>
+  <h1>Validation, <em>test</em></h1>
+  <p class="hero-desc">
+    Jeux de tests, graphe de flot de contrôle, couverture des instructions et des branches —
+    la phase de validation est indissociable du cycle de développement logiciel.
+  </p>
+  <div class="hero-stats">
+    <div class="stat">
+      <span class="stat-val">S1</span>
+      <span class="stat-label">Semestre</span>
+    </div>
+    <div class="stat">
+      <span class="stat-val">5</span>
+      <span class="stat-label">Sections</span>
+    </div>
+    <div class="stat">
+      <span class="stat-val">10</span>
+      <span class="stat-label">QCM</span>
+    </div>
+  </div>
+</div>
+
+<!-- PROGRESS -->
+<div class="progress-bar-wrap" style="max-width:900px; margin: 0 auto 3rem; padding: 1.2rem 2rem;">
+  <span class="progress-label">Progression — Section 1.3</span>
+  <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+  <span class="progress-count" id="progress-count">0 / 5 vus</span>
+</div>
+
+<!-- ─── SECTION 01 ─── -->
+<section class="section" id="s01">
+  <div class="section-header">
+    <span class="section-num">01</span>
+    <span class="section-title">Notions du programme officiel</span>
+    <button class="seen-btn" onclick="markSeen(1)">✓ Vu</button>
+  </div>
+
+  <div class="card">
+    <p style="color:var(--muted); font-size:0.88rem; margin-bottom:1rem;">
+      Le tableau ci-dessous reprend <strong>exactement</strong> les notions et commentaires du programme officiel (BO 2021) pour la section 1.3.
+    </p>
+    <table class="prog-table">
+      <thead>
+        <tr><th>Notion</th><th>Commentaires</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Jeu de tests associé à un programme</td>
+          <td>Il n'est pas attendu de connaissances sur la génération automatique de jeux de tests ; un étudiant est capable d'écrire un jeu de tests à la main donnant à la fois des entrées et les sorties correspondantes attendues. On sensibilise par des exemples à la notion de partitionnement des domaines d'entrée et au test des limites.</td>
+        </tr>
+        <tr>
+          <td>Graphe de flot de contrôle. Chemins faisables. Couverture des sommets, des arcs ou des chemins (avec ou sans cycle) du graphe de flot de contrôle</td>
+          <td>Les étudiants sont capables d'écrire un jeu de tests satisfaisant un critère de couverture des instructions (sommets) ou des branches (arcs) sur les chemins faisables.</td>
+        </tr>
+        <tr>
+          <td>Test exhaustif de la condition d'une boucle ou d'une conditionnelle</td>
+          <td>Il s'agit, lorsque la condition booléenne comporte des conjonctions ou disjonctions, de ne pas se contenter de la traiter comme étant globalement vraie ou fausse, mais de formuler des tests qui réalisent toutes les possibilités de la satisfaire. On se limite à des exemples simples pour lesquels les cas possibles se décèlent dès la lecture du programme.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ─── SECTION 02 ─── -->
+<section class="section" id="s02">
+  <div class="section-header">
+    <span class="section-num">02</span>
+    <span class="section-title">Rappels de cours</span>
+    <button class="seen-btn" onclick="markSeen(2)">✓ Vu</button>
+  </div>
+
+  <div class="cours-grid">
+
+    <!-- 2.1 Jeu de tests -->
+    <div class="card">
+      <div class="card-title"><span class="icon">🧪</span> 2.1 — Jeu de tests</div>
+      <h3>Définition et objectifs</h3>
+      <p>Un <strong>jeu de tests</strong> est un ensemble de couples (entrée, sortie attendue) permettant de vérifier le comportement d'un programme. La validation par tests est complémentaire des preuves formelles : elle ne garantit pas l'absence de bugs mais en révèle la présence.</p>
+      <div class="highlight">
+        <em>Principe de Dijkstra :</em> «&nbsp;Les tests peuvent montrer la présence d'erreurs, jamais leur absence.&nbsp;»
+      </div>
+      <p><strong>Partitionnement des domaines d'entrée :</strong> on découpe l'ensemble des entrées en classes d'équivalence pour lesquelles le programme est supposé se comporter de façon identique. On choisit au moins un représentant par classe.</p>
+      <div class="def-grid">
+        <div class="def-card">
+          <div class="def-name">Cas nominal</div>
+          <p>Entrée typique, dans la plage attendue.</p>
+        </div>
+        <div class="def-card">
+          <div class="def-name">Valeur limite</div>
+          <p>Frontières du domaine : min, max, 0, tableau vide…</p>
+        </div>
+        <div class="def-card">
+          <div class="def-name">Cas erroné</div>
+          <p>Entrée invalide, hors domaine de définition.</p>
+        </div>
+      </div>
+      <div class="highlight warn">
+        ⚠️ Le programme doit au minimum définir son comportement (ou signaler une erreur) pour les valeurs limites et les cas erronés.
+      </div>
+    </div>
+
+    <!-- 2.2 GFC -->
+    <div class="card">
+      <div class="card-title"><span class="icon">🔷</span> 2.2 — Graphe de flot de contrôle (GFC)</div>
+      <h3>Construction et vocabulaire</h3>
+      <p>Le <strong>GFC</strong> d'un programme est un graphe orienté où :</p>
+      <div class="def-grid">
+        <div class="def-card">
+          <div class="def-name">Sommet (nœud)</div>
+          <p>Bloc d'instructions exécutées séquentiellement sans branchement.</p>
+        </div>
+        <div class="def-card">
+          <div class="def-name">Arc</div>
+          <p>Transition entre deux blocs ; peut être conditionnel (vrai/faux).</p>
+        </div>
+        <div class="def-card">
+          <div class="def-name">Chemin faisable</div>
+          <p>Chemin dans le GFC qui correspond à une exécution réelle du programme.</p>
+        </div>
+      </div>
+      <p style="margin-top:0.75rem;">Exemple — GFC d'une fonction avec un <code>if-else</code> et une boucle <code>while</code> :</p>
+
+      <div class="cfg-container">
+        <svg class="cfg-svg" width="340" height="310" viewBox="0 0 340 310" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="arr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="#5b8dee"/>
+            </marker>
+            <marker id="arrg" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="#4caf82"/>
+            </marker>
+            <marker id="arrr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="#e05b5b"/>
+            </marker>
+          </defs>
+          <!-- ENTRY -->
+          <rect x="130" y="10" width="80" height="32" rx="6" fill="#1e2336" stroke="#5b8dee" stroke-width="1.5"/>
+          <text x="170" y="30" fill="#5b8dee" font-family="JetBrains Mono, monospace" font-size="11" text-anchor="middle">Entrée</text>
+          <!-- WHILE COND -->
+          <polygon points="170,60 230,88 170,116 110,88" fill="#1e2336" stroke="#e0c05b" stroke-width="1.5"/>
+          <text x="170" y="84" fill="#e0c05b" font-family="JetBrains Mono, monospace" font-size="10" text-anchor="middle">while</text>
+          <text x="170" y="97" fill="#e0c05b" font-family="JetBrains Mono, monospace" font-size="10" text-anchor="middle">(cond)</text>
+          <!-- IF COND -->
+          <polygon points="170,134 225,158 170,182 115,158" fill="#1e2336" stroke="#e0c05b" stroke-width="1.5"/>
+          <text x="170" y="162" fill="#e0c05b" font-family="JetBrains Mono, monospace" font-size="10" text-anchor="middle">if (x)</text>
+          <!-- THEN block -->
+          <rect x="55" y="196" width="70" height="30" rx="5" fill="#1e2336" stroke="#4caf82" stroke-width="1.5"/>
+          <text x="90" y="215" fill="#4caf82" font-family="JetBrains Mono, monospace" font-size="10" text-anchor="middle">then</text>
+          <!-- ELSE block -->
+          <rect x="215" y="196" width="70" height="30" rx="5" fill="#1e2336" stroke="#e05b5b" stroke-width="1.5"/>
+          <text x="250" y="215" fill="#e05b5b" font-family="JetBrains Mono, monospace" font-size="10" text-anchor="middle">else</text>
+          <!-- EXIT -->
+          <rect x="130" y="268" width="80" height="32" rx="6" fill="#1e2336" stroke="#5b8dee" stroke-width="1.5"/>
+          <text x="170" y="288" fill="#5b8dee" font-family="JetBrains Mono, monospace" font-size="11" text-anchor="middle">Sortie</text>
+          <!-- Arcs -->
+          <line x1="170" y1="42" x2="170" y2="55" stroke="#5b8dee" stroke-width="1.5" marker-end="url(#arr)"/>
+          <line x1="170" y1="116" x2="170" y2="129" stroke="#5b8dee" stroke-width="1.5" marker-end="url(#arr)"/>
+          <!-- while true → if -->
+          <text x="175" y="125" fill="#4caf82" font-size="9" font-family="JetBrains Mono, monospace">vrai</text>
+          <!-- while false → sortie -->
+          <line x1="110" y1="88" x2="50" y2="88" stroke="#e05b5b" stroke-width="1.5"/>
+          <line x1="50" y1="88" x2="50" y2="284" stroke="#e05b5b" stroke-width="1.5"/>
+          <line x1="50" y1="284" x2="128" y2="284" stroke="#e05b5b" stroke-width="1.5" marker-end="url(#arrr)"/>
+          <text x="52" y="84" fill="#e05b5b" font-size="9" font-family="JetBrains Mono, monospace">faux</text>
+          <!-- if → then -->
+          <line x1="115" y1="158" x2="90" y2="158" stroke="#4caf82" stroke-width="1.5"/>
+          <line x1="90" y1="158" x2="90" y2="193" stroke="#4caf82" stroke-width="1.5" marker-end="url(#arrg)"/>
+          <text x="96" y="154" fill="#4caf82" font-size="9" font-family="JetBrains Mono, monospace">vrai</text>
+          <!-- if → else -->
+          <line x1="225" y1="158" x2="250" y2="158" stroke="#e05b5b" stroke-width="1.5"/>
+          <line x1="250" y1="158" x2="250" y2="193" stroke="#e05b5b" stroke-width="1.5" marker-end="url(#arrr)"/>
+          <text x="228" y="154" fill="#e05b5b" font-size="9" font-family="JetBrains Mono, monospace">faux</text>
+          <!-- then/else → back to while -->
+          <line x1="90" y1="226" x2="90" y2="250" stroke="#8892b0" stroke-width="1.5"/>
+          <line x1="90" y1="250" x2="300" y2="250" stroke="#8892b0" stroke-width="1.5"/>
+          <line x1="300" y1="250" x2="300" y2="88" stroke="#8892b0" stroke-width="1.5"/>
+          <line x1="300" y1="88" x2="232" y2="88" stroke="#8892b0" stroke-width="1.5" marker-end="url(#arr)"/>
+          <line x1="250" y1="226" x2="250" y2="250" stroke="#8892b0" stroke-width="1.5"/>
+        </svg>
+        <div class="cfg-legend">
+          <span><span class="dot" style="background:var(--accent)"></span> Bloc séquentiel</span>
+          <span><span class="dot" style="background:var(--warn)"></span> Branchement conditionnel</span>
+          <span><span class="dot" style="background:var(--pass)"></span> Branche vraie</span>
+          <span><span class="dot" style="background:var(--fail)"></span> Branche fausse</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2.3 Critères de couverture -->
+    <div class="card">
+      <div class="card-title"><span class="icon">📐</span> 2.3 — Critères de couverture</div>
+      <h3>Couverture des instructions (sommets)</h3>
+      <p>Un jeu de tests satisfait la <strong>couverture des instructions</strong> si tout sommet du GFC est traversé par au moins un test. C'est le critère minimal.</p>
+      <div class="highlight success"><em>Couverture instructions :</em> chaque ligne de code est exécutée au moins une fois.</div>
+      <h3 style="margin-top:1rem;">Couverture des branches (arcs)</h3>
+      <p>Un jeu de tests satisfait la <strong>couverture des branches</strong> si tout arc du GFC est traversé par au moins un test. Ce critère est plus fort : il oblige à tester chaque issue de tout branchement (<code>true</code> et <code>false</code>).</p>
+      <div class="highlight"><em>Couverture branches :</em> chaque arc du GFC parcouru ⟹ couverture instructions automatiquement satisfaite.</div>
+      <h3 style="margin-top:1rem;">Couverture des chemins</h3>
+      <p>La <strong>couverture des chemins</strong> exige de parcourir tous les chemins faisables du GFC. En présence de boucles, le nombre de chemins peut être infini — on se limite alors à des variantes (0, 1, 2 itérations).</p>
+      <div class="highlight warn">⚠️ Seuls les <em>chemins faisables</em> comptent. Un chemin infaisable (combinaison de conditions impossible) n'a pas à être couvert.</div>
+    </div>
+
+    <!-- 2.4 Test exhaustif des conditions -->
+    <div class="card">
+      <div class="card-title"><span class="icon">🔬</span> 2.4 — Test exhaustif des conditions composées</div>
+      <h3>Conjonctions et disjonctions</h3>
+      <p>Lorsqu'une condition booléenne est composée (<code>A &amp;&amp; B</code> ou <code>A || B</code>), la traiter globalement (juste vrai/faux) est insuffisant. Il faut des tests qui réalisent chaque sous-cas :</p>
+
+      <table class="test-table">
+        <thead>
+          <tr>
+            <th>Condition</th><th>Cas à couvrir</th><th>Intérêt</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>A &amp;&amp; B</code></td>
+            <td>
+              <code>A=V, B=V</code> → vrai<br>
+              <code>A=V, B=F</code> → faux<br>
+              <code>A=F, B=?</code> → faux (court-circuit)
+            </td>
+            <td class="cat">Court-circuit possible côté A</td>
+          </tr>
+          <tr>
+            <td><code>A || B</code></td>
+            <td>
+              <code>A=F, B=F</code> → faux<br>
+              <code>A=F, B=V</code> → vrai<br>
+              <code>A=V, B=?</code> → vrai (court-circuit)
+            </td>
+            <td class="cat">Court-circuit possible côté A</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="highlight warn" style="margin-top:0.75rem;">
+        ⚠️ En C et OCaml, <code>&amp;&amp;</code> et <code>||</code> utilisent l'évaluation <em>paresseuse</em> (court-circuit). Un test qui active le court-circuit n'explore pas forcément <code>B</code>. Distinguer soigneusement les cas.
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ─── SECTION 03 ─── -->
+<section class="section" id="s03">
+  <div class="section-header">
+    <span class="section-num">03</span>
+    <span class="section-title">Exemples de code en C et OCaml</span>
+    <button class="seen-btn" onclick="markSeen(3)">✓ Vu</button>
+  </div>
+
+  <div class="cours-grid">
+
+  <!-- Exemple 1 : dichotomie -->
+  <div class="card">
+    <div class="card-title">① Recherche dichotomique — jeu de tests &amp; couverture</div>
+    <p style="font-size:0.88rem; color:var(--muted); margin-bottom:0.75rem;">Recherche d'une valeur dans un tableau trié. On construit un jeu de tests couvrant toutes les branches.</p>
+    <table class="test-table" style="margin-bottom:1rem;">
+      <thead>
+        <tr><th>Catégorie</th><th>Entrée (t, n, val)</th><th>Sortie attendue</th><th>Branche couverte</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="cat">Nominal — trouvé</td><td><code>[1,3,5,7], 4, 5</code></td><td><code>true (idx=2)</code></td><td>val == milieu</td></tr>
+        <tr><td class="cat">Nominal — absent</td><td><code>[1,3,5,7], 4, 4</code></td><td><code>false</code></td><td>boucle complète, fail</td></tr>
+        <tr><td class="cat">Limite — début</td><td><code>[1,3,5,7], 4, 1</code></td><td><code>true</code></td><td>cherche à gauche</td></tr>
+        <tr><td class="cat">Limite — fin</td><td><code>[1,3,5,7], 4, 7</code></td><td><code>true</code></td><td>cherche à droite</td></tr>
+        <tr><td class="cat">Limite — tableau vide</td><td><code>[], 0, 5</code></td><td><code>false</code></td><td>boucle non entrée</td></tr>
+        <tr><td class="cat">Limite — 1 élément</td><td><code>[5], 1, 5</code></td><td><code>true</code></td><td>1 seul tour</td></tr>
+      </tbody>
+    </table>
+
+    <div class="code-tabs" style="display:flex; gap:0.25rem; margin-bottom:0.5rem;">
+      <button class="code-tab active" onclick="switchTab(this, 'dicho-c')">C</button>
+      <button class="code-tab" onclick="switchTab(this, 'dicho-ml')">OCaml</button>
+    </div>
+
+    <div id="dicho-c" class="tab-panel active">
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">C99</span>
+          <div class="code-actions">
+            <button class="btn-sm run" onclick="simulate(this)">▶ Simuler</button>
+            <button class="btn-sm" onclick="download(this,'.c')">↓ .c</button>
+            <button class="btn-sm" onclick="resetCode(this)">↺ Reset</button>
+          </div>
+        </div>
+        <textarea class="code" rows="30" spellcheck="false">#include &lt;stdbool.h&gt;
+#include &lt;stddef.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;assert.h&gt;
+
+/*
+ * dicho : recherche val dans t[0..n-1] (trié croissant)
+ * Précondition  : t trié par ordre croissant, n >= 0
+ * Postcondition : retourne true ssi val ∈ {t[0],...,t[n-1]}
+ */
+bool dicho(int t[], int n, int val) {
+    int g = 0, d = n - 1;
+    /* Invariant : si val ∈ t, alors val ∈ t[g..d] */
+    while (g &lt;= d) {
+        int m = g + (d - g) / 2;  /* évite le débordement */
+        if (t[m] == val) return true;   /* ← branche "trouvé"  */
+        else if (t[m] &lt; val)  g = m + 1; /* ← cherche à droite  */
+        else                  d = m - 1; /* ← cherche à gauche  */
+    }
+    return false; /* ← branche "absent" */
+}
+
+/* ── Jeu de tests ── */
+int main(void) {
+    int t[] = {1, 3, 5, 7};
+
+    /* Nominaux */
+    assert( dicho(t, 4, 5));   /* trouvé (milieu) */
+    assert(!dicho(t, 4, 4));   /* absent          */
+    /* Limites */
+    assert( dicho(t, 4, 1));   /* premier élément */
+    assert( dicho(t, 4, 7));   /* dernier élément */
+    assert(!dicho(t, 0, 5));   /* tableau vide    */
+    int u[] = {5};
+    assert( dicho(u, 1, 5));   /* singleton       */
+
+    printf("Tous les tests passent.\n");
+    return 0;
+}</textarea>
+        <div class="output-label">sortie simulée</div>
+        <div class="output-box">Tous les tests passent.</div>
+      </div>
+    </div>
+
+    <div id="dicho-ml" class="tab-panel">
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">OCaml</span>
+          <div class="code-actions">
+            <button class="btn-sm run" onclick="simulate(this)">▶ Simuler</button>
+            <button class="btn-sm" onclick="download(this,'.ml')">↓ .ml</button>
+            <button class="btn-sm" onclick="resetCode(this)">↺ Reset</button>
+          </div>
+        </div>
+        <textarea class="code" rows="30" spellcheck="false">(* dicho : int array -> int -> bool
+   Précondition  : tableau trié par ordre croissant
+   Postcondition : true ssi val ∈ t
+   Invariant : si val ∈ t, val ∈ t[g..d] *)
+let dicho t val_ =
+  let n = Array.length t in
+  let g = ref 0 and d = ref (n - 1) in
+  let found = ref false in
+  while !g &lt;= !d && not !found do
+    let m = !g + (!d - !g) / 2 in
+    if      t.(m) = val_ then found := true   (* trouvé  *)
+    else if t.(m) &lt; val_ then g := m + 1      (* droite  *)
+    else                       d := m - 1     (* gauche  *)
+  done;
+  !found
+
+(* Version fonctionnelle récursive *)
+let dicho_rec t val_ =
+  let rec aux g d =
+    if g > d then false
+    else
+      let m = g + (d - g) / 2 in
+      if      t.(m) = val_ then true
+      else if t.(m) &lt; val_ then aux (m+1) d
+      else                       aux g (m-1)
+  in
+  aux 0 (Array.length t - 1)
+
+(* ── Jeu de tests ── *)
+let () =
+  let t = [|1; 3; 5; 7|] in
+  assert (    dicho t 5);    (* trouvé milieu  *)
+  assert (not (dicho t 4));  (* absent         *)
+  assert (    dicho t 1);    (* premier        *)
+  assert (    dicho t 7);    (* dernier        *)
+  assert (not (dicho [||] 5));          (* tableau vide   *)
+  assert (    dicho_rec [|5|] 5);       (* singleton      *)
+  print_string "Tous les tests passent.\n"</textarea>
+        <div class="output-label">sortie simulée</div>
+        <div class="output-box">Tous les tests passent.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Exemple 2 : condition composée -->
+  <div class="card">
+    <div class="card-title">② Test exhaustif d'une condition composée</div>
+    <p style="font-size:0.88rem; color:var(--muted); margin-bottom:0.75rem;">
+      Fonction qui vérifie si un entier est dans un intervalle <em>ouvert</em> non vide : <code>a &lt; x &amp;&amp; x &lt; b</code>. On doit tester toutes les combinaisons des deux sous-conditions.
+    </p>
+
+    <div class="code-tabs" style="display:flex; gap:0.25rem; margin-bottom:0.5rem;">
+      <button class="code-tab active" onclick="switchTab(this, 'cond-c')">C</button>
+      <button class="code-tab" onclick="switchTab(this, 'cond-ml')">OCaml</button>
+    </div>
+
+    <div id="cond-c" class="tab-panel active">
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">C99</span>
+          <div class="code-actions">
+            <button class="btn-sm run" onclick="simulate(this)">▶ Simuler</button>
+            <button class="btn-sm" onclick="download(this,'.c')">↓ .c</button>
+            <button class="btn-sm" onclick="resetCode(this)">↺ Reset</button>
+          </div>
+        </div>
+        <textarea class="code" rows="30" spellcheck="false">#include &lt;stdbool.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;assert.h&gt;
+
+/*
+ * dans_intervalle : teste si a < x < b
+ * Précondition  : a < b
+ * Postcondition : retourne (a < x) && (x < b)
+ *
+ * Condition composée : A = (a < x),  B = (x < b)
+ * Cas à couvrir :
+ *   A=F, B=?  → court-circuit, résultat false  [test 1]
+ *   A=V, B=F  → résultat false                 [test 2]
+ *   A=V, B=V  → résultat true                  [test 3]
+ */
+bool dans_intervalle(int a, int x, int b) {
+    return (a &lt; x) &amp;&amp; (x &lt; b);
+}
+
+int main(void) {
+    /* Test 1 : A fausse (court-circuit, B non évaluée) */
+    assert(!dans_intervalle(5, 2, 10));   /* 5 < 2 = false → false */
+    /* Test 2 : A vraie, B fausse */
+    assert(!dans_intervalle(0, 8, 5));    /* 0 < 8 = true, 8 < 5 = false → false */
+    /* Test 3 : A vraie, B vraie */
+    assert( dans_intervalle(0, 3, 5));    /* 0 < 3 = true, 3 < 5 = true → true  */
+    /* Valeurs limites */
+    assert(!dans_intervalle(0, 0, 5));    /* x == a : borne exclue */
+    assert(!dans_intervalle(0, 5, 5));    /* x == b : borne exclue */
+
+    printf("Couverture des conditions composees : OK\n");
+    return 0;
+}</textarea>
+        <div class="output-label">sortie simulée</div>
+        <div class="output-box">Couverture des conditions composees : OK</div>
+      </div>
+    </div>
+
+    <div id="cond-ml" class="tab-panel">
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">OCaml</span>
+          <div class="code-actions">
+            <button class="btn-sm run" onclick="simulate(this)">▶ Simuler</button>
+            <button class="btn-sm" onclick="download(this,'.ml')">↓ .ml</button>
+            <button class="btn-sm" onclick="resetCode(this)">↺ Reset</button>
+          </div>
+        </div>
+        <textarea class="code" rows="30" spellcheck="false">(* dans_intervalle : int -> int -> int -> bool
+   Précondition  : a < b
+   Postcondition : a < x && x < b
+   Condition composée A = (a < x),  B = (x < b)
+   Cas couverts :
+     A=F, court-circuit   → false  [test 1]
+     A=V, B=F             → false  [test 2]
+     A=V, B=V             → true   [test 3] *)
+let dans_intervalle a x b = (a &lt; x) &amp;&amp; (x &lt; b)
+
+let () =
+  (* Test 1 : A fausse (court-circuit) *)
+  assert (not (dans_intervalle 5 2 10));
+  (* Test 2 : A vraie, B fausse *)
+  assert (not (dans_intervalle 0 8 5));
+  (* Test 3 : A vraie, B vraie  *)
+  assert (     dans_intervalle 0 3 5 );
+  (* Limites *)
+  assert (not (dans_intervalle 0 0 5));   (* borne inférieure exclue *)
+  assert (not (dans_intervalle 0 5 5));   (* borne supérieure exclue *)
+  print_string "Couverture des conditions composees : OK\n"</textarea>
+        <div class="output-label">sortie simulée</div>
+        <div class="output-box">Couverture des conditions composees : OK</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Exemple 3 : GFC avec couverture -->
+  <div class="card">
+    <div class="card-title">③ Couverture des branches — exemple complet</div>
+    <p style="font-size:0.88rem; color:var(--muted); margin-bottom:0.75rem;">
+      Fonction <code>signe_somme</code> : calcule le signe de la somme des positifs d'un tableau. On identifie chaque arc du GFC et on construit un jeu de tests couvrant toutes les branches.
+    </p>
+    <div class="code-tabs" style="display:flex; gap:0.25rem; margin-bottom:0.5rem;">
+      <button class="code-tab active" onclick="switchTab(this, 'cov-c')">C</button>
+      <button class="code-tab" onclick="switchTab(this, 'cov-ml')">OCaml</button>
+    </div>
+
+    <div id="cov-c" class="tab-panel active">
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">C99</span>
+          <div class="code-actions">
+            <button class="btn-sm run" onclick="simulate(this)">▶ Simuler</button>
+            <button class="btn-sm" onclick="download(this,'.c')">↓ .c</button>
+            <button class="btn-sm" onclick="resetCode(this)">↺ Reset</button>
+          </div>
+        </div>
+        <textarea class="code" rows="44" spellcheck="false">#include &lt;stdio.h&gt;
+#include &lt;assert.h&gt;
+
+/*
+ * signe_somme : retourne +1 si la somme des positifs > 0,
+ *               -1 si < 0, 0 si = 0.
+ *
+ * GFC — arcs à couvrir :
+ *  [A1] boucle for : condition i<n vraie (corps parcouru)
+ *  [A2] boucle for : condition i<n fausse (boucle non exécutée)
+ *  [A3] if t[i] > 0 : branche vraie  (accumuler)
+ *  [A4] if t[i] > 0 : branche fausse (ignorer)
+ *  [A5] somme > 0  : true  → return +1
+ *  [A6] somme < 0  : true  → return -1
+ *  [A7] else       : return 0
+ */
+int signe_somme(int t[], int n) {
+    int somme = 0;
+    for (int i = 0; i &lt; n; i++) {  /* A1, A2 */
+        if (t[i] > 0)               /* A3, A4 */
+            somme += t[i];
+    }
+    if      (somme > 0) return  1;  /* A5 */
+    else if (somme &lt; 0) return -1;  /* A6  -- impossible ici ! */
+    else                return  0;  /* A7 */
+}
+
+int main(void) {
+    /* Couvre A1, A3, A5 : tableau avec positifs, somme > 0 */
+    int t1[] = {3, -1, 2};
+    assert(signe_somme(t1, 3) == 1);
+
+    /* Couvre A1, A4, A7 : tableau sans positifs, somme = 0 */
+    int t2[] = {-2, -5, 0};
+    assert(signe_somme(t2, 3) == 0);
+
+    /* Couvre A2 : tableau vide */
+    assert(signe_somme(NULL, 0) == 0);
+
+    /* Note : A6 (somme &lt; 0) est infaisable car
+       on ne cumule que les positifs → chemin infaisable */
+
+    printf("Couverture des branches (sauf infaisable) : OK\n");
+    return 0;
+}</textarea>
+        <div class="output-label">sortie simulée</div>
+        <div class="output-box">Couverture des branches (sauf infaisable) : OK</div>
+      </div>
+    </div>
+
+    <div id="cov-ml" class="tab-panel">
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">OCaml</span>
+          <div class="code-actions">
+            <button class="btn-sm run" onclick="simulate(this)">▶ Simuler</button>
+            <button class="btn-sm" onclick="download(this,'.ml')">↓ .ml</button>
+            <button class="btn-sm" onclick="resetCode(this)">↺ Reset</button>
+          </div>
+        </div>
+        <textarea class="code" rows="32" spellcheck="false">(* signe_somme : int array -> int
+   Retourne le signe de la somme des éléments positifs.
+   Arcs GFC couverts dans le jeu de tests ci-dessous :
+     A1 : boucle (corps), A2 : boucle (skip)
+     A3 : if vrai, A4 : if faux
+     A5 : somme > 0, A7 : somme = 0
+     A6 (somme < 0) : chemin infaisable *)
+let signe_somme t =
+  let somme = ref 0 in
+  Array.iter (fun x -> if x > 0 then somme := !somme + x) t;
+  if      !somme > 0 then  1   (* A5 *)
+  else if !somme &lt; 0 then -1   (* A6 — infaisable *)
+  else                     0   (* A7 *)
+
+let () =
+  (* A1 + A3 + A5 : positifs présents *)
+  assert (signe_somme [|3; -1; 2|] = 1);
+  (* A1 + A4 + A7 : pas de positifs *)
+  assert (signe_somme [|-2; -5; 0|] = 0);
+  (* A2 : tableau vide *)
+  assert (signe_somme [||] = 0);
+  print_string "Couverture des branches (sauf infaisable) : OK\n"</textarea>
+        <div class="output-label">sortie simulée</div>
+        <div class="output-box">Couverture des branches (sauf infaisable) : OK</div>
+      </div>
+    </div>
+
+  </div>
+  </div>
+</section>
+
+<!-- ─── SECTION 04 ─── -->
+<section class="section" id="s04">
+  <div class="section-header">
+    <span class="section-num">04</span>
+    <span class="section-title">Auto-évaluation — Questions de cours</span>
+    <button class="seen-btn" onclick="markSeen(4)">✓ Vu</button>
+  </div>
+
+  <div class="card">
+    <div class="qcm-progress">
+      <span id="qcm-num">Question 1 / 10</span>
+      <span>⏱ <span id="qcm-timer">00:00</span></span>
+      <span id="qcm-pause-btn" style="cursor:pointer; color:var(--muted);" onclick="toggleTimer()">⏸ Pause</span>
+      <span style="cursor:pointer; color:var(--muted);" onclick="resetQCM()">↺ Reset</span>
+      <span style="cursor:pointer; color:var(--muted);" onclick="toggleAnswers()">👁 Masquer</span>
+    </div>
+    <div class="qcm-zone">
+      <div class="qcm-card">
+        <div class="qcm-q" id="qcm-q"></div>
+        <div class="qcm-opts" id="qcm-opts"></div>
+        <div class="qcm-feedback" id="qcm-feedback"></div>
+      </div>
+    </div>
+    <div class="qcm-controls">
+      <span class="qcm-score-display">Score : <span id="qcm-score">—</span></span>
+      <div style="display:flex; gap:0.5rem;">
+        <button class="btn-secondary" onclick="shuffleQCM()">🔀 Nouveau QCM</button>
+        <button class="btn-primary" id="qcm-next" onclick="nextQuestion()" style="display:none;">Suivant →</button>
+      </div>
+    </div>
+    <div id="qcm-final" style="display:none; margin-top:1rem; text-align:center;">
+      <div style="font-family:var(--font-display); font-size:1.4rem; font-weight:800; color:var(--accent);" id="qcm-final-score"></div>
+      <button class="btn-secondary" style="margin-top:0.75rem;" onclick="shuffleQCM()">🔀 Nouveau QCM</button>
+    </div>
+  </div>
+</section>
+
+<!-- ─── SECTION 05 ─── -->
+<section class="section" id="s05">
+  <div class="section-header">
+    <span class="section-num">05</span>
+    <span class="section-title">Contact &amp; Prise de rendez-vous</span>
+    <button class="seen-btn" onclick="markSeen(5)">✓ Vu</button>
+  </div>
+
+  <p style="font-size:0.88rem; color:var(--muted); margin-bottom:1.25rem;">
+    Scannez le QR code correspondant à votre profil ou cliquez sur le lien pour accéder au formulaire ou réserver un créneau.
+  </p>
+  <div class="contact-grid">
+    <a class="contact-card" href="https://docs.google.com/forms/d/e/1FAIpQLSfiOvJG1wicFQY8EQufqy5YxGgTPSFPxdyb-OAtk95SUGxWFA/viewform" target="_blank">
+      <span class="contact-icon">📋</span>
+      <span class="contact-name">Formulaire de retour</span>
+      <div class="qr-wrap" id="qr-forms"></div>
+      <p class="contact-desc">Donnez votre avis sur le cours, signalez une erreur ou posez une question.</p>
+      <span class="contact-link">Google Forms ↗</span>
+    </a>
+    <a class="contact-card" href="https://calendly.com/didaskalosmanthanon/30min?month=2026-03" target="_blank">
+      <span class="contact-icon">🎓</span>
+      <span class="contact-name">Élèves — 30 min</span>
+      <div class="qr-wrap" id="qr-eleves"></div>
+      <p class="contact-desc">Réservez un créneau individuel de 30 minutes pour un point pédagogique.</p>
+      <span class="contact-link">Calendly ↗</span>
+    </a>
+    <a class="contact-card" href="https://calendly.com/didaskalosmanthanon/appel-pro-formation-ou-collaboration-45-min?month=2026-03" target="_blank">
+      <span class="contact-icon">🏫</span>
+      <span class="contact-name">Professeurs — 45 min</span>
+      <div class="qr-wrap" id="qr-profs"></div>
+      <p class="contact-desc">Appel professionnel : formation, collaboration ou partenariat pédagogique.</p>
+      <span class="contact-link">Calendly ↗</span>
+    </a>
+    <a class="contact-card" href="https://calendly.com/didaskalosmanthanon/point-parents-presentation-de-l-outil-15-min?month=2026-03" target="_blank">
+      <span class="contact-icon">👨‍👩‍👧</span>
+      <span class="contact-name">Parents — 15 min</span>
+      <div class="qr-wrap" id="qr-parents"></div>
+      <p class="contact-desc">Présentation de l'outil et point sur le suivi de votre enfant.</p>
+      <span class="contact-link">Calendly ↗</span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  © 2025 — MP2I/MPI Informatique — Programme officiel BO 2021 — Section 1.3 Validation, test
+</footer>
+
+<script>
+// ─── SCROLL REVEAL ───
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.07 });
+document.querySelectorAll('.section').forEach(s => obs.observe(s));
+
+// ─── PROGRESS ───
+let seen = 0;
+function markSeen(n) {
+  const btn = document.querySelector(`#s0${n} .seen-btn`);
+  if (btn.classList.contains('done')) return;
+  btn.classList.add('done');
+  btn.textContent = '✓ Vu';
+  seen++;
+  document.getElementById('progress-count').textContent = seen + ' / 5 vus';
+  document.getElementById('progress-fill').style.width = (seen/5*100) + '%';
+}
+
+// ─── TABS ───
+function switchTab(btn, panelId) {
+  const card = btn.closest('.card');
+  card.querySelectorAll('.code-tab').forEach(t => t.classList.remove('active'));
+  card.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(panelId).classList.add('active');
+}
+
+// ─── CODE UTILS ───
+const originals = {};
+document.querySelectorAll('textarea.code').forEach(ta => {
+  originals[ta.id = ta.id || Math.random().toString(36).slice(2)] = ta.value;
+});
+function simulate(btn) {
+  const box = btn.closest('.code-block').querySelector('.output-box');
+  box.style.color = 'var(--accent3)';
+}
+function resetCode(btn) {
+  const ta = btn.closest('.code-block').querySelector('textarea.code');
+  ta.value = originals[ta.id];
+}
+function download(btn, ext) {
+  const ta = btn.closest('.code-block').querySelector('textarea.code');
+  const blob = new Blob([ta.value], {type: 'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'validation_test' + ext;
+  a.click();
+}
+
+// ─── QCM ───
+const QUESTIONS = [
+  {
+    q: "Qu'est-ce qu'un jeu de tests ?",
+    opts: [
+      "Un ensemble de couples (entrée, sortie attendue) permettant de vérifier un programme.",
+      "Un programme qui génère automatiquement des cas de test.",
+      "Une liste de commentaires décrivant les postconditions.",
+      "Un ensemble de valeurs aléatoires soumises au programme."
+    ],
+    ans: 0,
+    expl: "Un jeu de tests est bien un ensemble de couples (entrée, sortie attendue). La génération automatique n'est pas au programme."
+  },
+  {
+    q: "Qu'est-ce qu'un chemin faisable dans un GFC ?",
+    opts: [
+      "Un chemin qui traverse tous les sommets du GFC.",
+      "Un chemin correspondant à une exécution réelle du programme.",
+      "Le chemin le plus court entre l'entrée et la sortie.",
+      "Tout chemin ne contenant pas de cycle."
+    ],
+    ans: 1,
+    expl: "Un chemin faisable correspond à une exécution effective du programme, c'est-à-dire réalisable avec une certaine entrée."
+  },
+  {
+    q: "La couverture des branches (arcs) implique-t-elle la couverture des instructions (sommets) ?",
+    opts: [
+      "Non, ce sont deux critères indépendants.",
+      "Oui, couvrir tous les arcs implique couvrir tous les sommets.",
+      "Seulement si le GFC est acyclique.",
+      "Non, la couverture des sommets est plus forte."
+    ],
+    ans: 1,
+    expl: "La couverture des arcs est plus forte : tout sommet accessible depuis l'entrée est atteint si tous ses arcs entrants sont couverts."
+  },
+  {
+    q: "Pour la condition <code>A &amp;&amp; B</code>, combien de cas distincts le test exhaustif doit-il couvrir ?",
+    opts: [
+      "2 cas : vrai et faux.",
+      "3 cas : A faux (court-circuit), A vrai et B faux, A vrai et B vrai.",
+      "4 cas : toutes les combinaisons de A et B.",
+      "1 seul cas suffit si le résultat global est vrai."
+    ],
+    ans: 1,
+    expl: "Avec l'évaluation paresseuse, quand A est fausse, B n'est pas évaluée. On distingue donc 3 cas comportementalement distincts."
+  },
+  {
+    q: "Qu'est-ce qu'un chemin infaisable ?",
+    opts: [
+      "Un chemin trop long à exécuter.",
+      "Un chemin ne partant pas du nœud initial.",
+      "Un chemin qui correspond à une combinaison de conditions jamais satisfaite simultanément.",
+      "Un chemin qui contient un cycle."
+    ],
+    ans: 2,
+    expl: "Un chemin infaisable est structurellement présent dans le GFC mais ne correspond à aucune entrée réelle du programme. Il n'a pas à être couvert."
+  },
+  {
+    q: "Quel critère de couverture est le plus faible ?",
+    opts: [
+      "Couverture des chemins.",
+      "Couverture des branches (arcs).",
+      "Couverture des instructions (sommets).",
+      "Test exhaustif des conditions composées."
+    ],
+    ans: 2,
+    expl: "La couverture des instructions est le critère minimal : tout chemin couvrant les arcs couvre forcément les sommets, mais pas l'inverse."
+  },
+  {
+    q: "Pour tester les <em>valeurs limites</em> d'une fonction prenant un tableau de taille n ≥ 0, que doit-on inclure dans le jeu de tests ?",
+    opts: [
+      "Uniquement un tableau de taille 1000.",
+      "Un tableau vide (n=0) et un tableau de taille 1, au minimum.",
+      "Seulement des tableaux de taille paire.",
+      "Un tableau dont tous les éléments sont nuls."
+    ],
+    ans: 1,
+    expl: "Les valeurs limites sont n=0 (tableau vide, condition de boucle immédiatement fausse) et n=1 (un seul tour de boucle). Ce sont des cas souvent révélateurs de bugs."
+  },
+  {
+    q: "Quel est l'objectif du <em>partitionnement des domaines d'entrée</em> ?",
+    opts: [
+      "Trier les entrées par ordre croissant avant de les soumettre.",
+      "Identifier des classes d'équivalence et choisir au moins un représentant par classe.",
+      "Générer automatiquement toutes les entrées possibles.",
+      "Réduire le nombre de tests à zéro en ne gardant que le cas nominal."
+    ],
+    ans: 1,
+    expl: "Le partitionnement évite la redondance : si deux entrées font suivre le même chemin d'exécution, tester l'une suffit. On prend un représentant par classe d'équivalence."
+  },
+  {
+    q: "Que garantit la couverture des chemins par rapport à la couverture des branches ?",
+    opts: [
+      "Rien de plus : les deux critères sont équivalents.",
+      "Elle garantit que toute séquence de branchements est explorée, ce qui est plus fort.",
+      "Elle est moins forte car elle ignore les cycles.",
+      "Elle garantit l'absence totale de bugs."
+    ],
+    ans: 1,
+    expl: "La couverture des chemins est plus forte : elle exige que chaque séquence possible d'exécution soit testée, pas seulement chaque arc individuellement."
+  },
+  {
+    q: "Pour la condition <code>x == 0 || x &gt; 10</code>, quel jeu de tests minimal couvre exhaustivement la condition composée ?",
+    opts: [
+      "{ x=0 } seulement.",
+      "{ x=0, x=5, x=15 } : court-circuit vrai, A faux et B faux, A faux et B vrai.",
+      "{ x=0, x=15 } : un cas vrai et un cas faux.",
+      "{ x=-1, x=0, x=10, x=11 }."
+    ],
+    ans: 1,
+    expl: "x=0 : A vraie (court-circuit, B non évaluée). x=5 : A fausse, B fausse → globalement faux. x=15 : A fausse, B vraie → globalement vrai. Ces 3 cas couvrent tous les sous-cas comportementaux."
+  }
+];
+
+let shuffled = [], cur = 0, score = 0, answered = false, showAns = true;
+let timerInterval = null, timerSecs = 0, timerRunning = false;
+
+function formatTime(s) {
+  return String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0');
+}
+function startTimer() {
+  timerRunning = true;
+  timerInterval = setInterval(() => {
+    timerSecs++;
+    document.getElementById('qcm-timer').textContent = formatTime(timerSecs);
+  }, 1000);
+}
+function toggleTimer() {
+  if (timerRunning) {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    document.getElementById('qcm-pause-btn').textContent = '▶ Reprendre';
+  } else {
+    startTimer();
+    document.getElementById('qcm-pause-btn').textContent = '⏸ Pause';
+  }
+}
+function toggleAnswers() { showAns = !showAns; }
+
+function shuffleQCM() {
+  shuffled = [...QUESTIONS].sort(() => Math.random() - 0.5);
+  cur = 0; score = 0; answered = false; timerSecs = 0;
+  clearInterval(timerInterval);
+  document.getElementById('qcm-timer').textContent = '00:00';
+  document.getElementById('qcm-final').style.display = 'none';
+  document.getElementById('qcm-score').textContent = '—';
+  document.getElementById('qcm-next').style.display = 'none';
+  startTimer();
+  renderQ();
+}
+
+function renderQ() {
+  if (cur >= shuffled.length) { showFinal(); return; }
+  const q = shuffled[cur];
+  document.getElementById('qcm-num').textContent = 'Question ' + (cur+1) + ' / ' + shuffled.length;
+  document.getElementById('qcm-q').innerHTML = q.q;
+  document.getElementById('qcm-feedback').className = 'qcm-feedback';
+  document.getElementById('qcm-next').style.display = 'none';
+  answered = false;
+  const optsEl = document.getElementById('qcm-opts');
+  optsEl.innerHTML = '';
+  q.opts.forEach((o, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'qcm-opt';
+    btn.innerHTML = o;
+    btn.onclick = () => answer(i);
+    optsEl.appendChild(btn);
+  });
+}
+
+function answer(idx) {
+  if (answered) return;
+  answered = true;
+  const q = shuffled[cur];
+  const opts = document.querySelectorAll('.qcm-opt');
+  opts.forEach(b => b.disabled = true);
+  opts[q.ans].classList.add('correct');
+  if (idx !== q.ans) opts[idx].classList.add('wrong');
+  else score++;
+  document.getElementById('qcm-score').textContent = score + '/' + (cur+1);
+  const fb = document.getElementById('qcm-feedback');
+  fb.className = 'qcm-feedback show ' + (idx === q.ans ? 'ok' : 'ko');
+  fb.innerHTML = (idx === q.ans ? '✓ ' : '✗ ') + q.expl;
+  document.getElementById('qcm-next').style.display = 'inline-block';
+}
+
+function nextQuestion() {
+  cur++;
+  renderQ();
+}
+
+function resetQCM() { shuffleQCM(); }
+
+function showFinal() {
+  clearInterval(timerInterval);
+  document.querySelector('.qcm-card').style.display = 'none';
+  const final = document.getElementById('qcm-final');
+  final.style.display = 'block';
+  document.getElementById('qcm-final-score').textContent =
+    'Score final : ' + score + ' / ' + shuffled.length + '  (' + formatTime(timerSecs) + ')';
+}
+
+// ─── QR CODES ───
+const qrData = [
+  { id: 'qr-forms',   url: 'https://docs.google.com/forms/d/e/1FAIpQLSfiOvJG1wicFQY8EQufqy5YxGgTPSFPxdyb-OAtk95SUGxWFA/viewform' },
+  { id: 'qr-eleves',  url: 'https://calendly.com/didaskalosmanthanon/30min?month=2026-03' },
+  { id: 'qr-profs',   url: 'https://calendly.com/didaskalosmanthanon/appel-pro-formation-ou-collaboration-45-min?month=2026-03' },
+  { id: 'qr-parents', url: 'https://calendly.com/didaskalosmanthanon/point-parents-presentation-de-l-outil-15-min?month=2026-03' },
+];
+qrData.forEach(({ id, url }) => {
+  new QRCode(document.getElementById(id), {
+    text: url,
+    width: 84,
+    height: 84,
+    colorDark: '#0f1117',
+    colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.M
+  });
+});
+
+// Init
+shuffleQCM();
+</script>
+</body>
+</html>
